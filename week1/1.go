@@ -10,7 +10,7 @@ func area(x, y float64) float64 {
 	return x * y
 }
 
-func Ex1() {
+func Week1Ex1() {
 	var x, y float64
 
 	fmt.Print("Enter value x: ")

@@ -8,7 +8,7 @@ You can return the answer in any order.
 
 package main
 
-func twoSum(nums []int, target int) []int {
+func Week1TwoSum(nums []int, target int) []int {
 	mp := make(map[int]int)
 
 	for i, num := range nums {

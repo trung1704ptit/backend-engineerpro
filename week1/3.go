@@ -45,7 +45,7 @@ func getSorted(slice []float64) []float64 {
 	return slice
 }
 
-func Ex3() {
+func Week1Ex3() {
 	var n int
 	var slice []float64
 
