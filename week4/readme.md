@@ -1,9 +1,9 @@
 ## Installation
-Run the PostgreSQL
+Run the PostgreSQL:
 docker-compose up -d
 
 
-## Migrattion
+## Migration
 go run migrate/migrate.go
 
 
