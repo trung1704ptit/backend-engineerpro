@@ -26,8 +26,8 @@ type SignUpInput struct {
 	Age             int64  `json:"age" binding:"required"`
 	Email           string `json:"email" binding:"required"`
 	Password        string `json:"password" binding:"required,min=8"`
-	PasswordConfirm string `json:"passwordConfirm" binding:"required"`
-	ProfileImage    string `json:"profile_image" binding:"required"`
+	PasswordConfirm string `json:"password_confirm" binding:"required"`
+	ProfileImage    string `json:"profile_image"`
 }
 
 type SignInInput struct {

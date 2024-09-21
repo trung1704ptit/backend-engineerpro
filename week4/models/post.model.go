@@ -11,9 +11,9 @@ type Post struct {
 	Title     string    `gorm:"uniqueIndex;not null" json:"title,omitempty"`
 	Content   string    `gorm:"not null" json:"content,omitempty"`
 	Image     string    `gorm:"not null" json:"image,omitempty"`
-	UserID    uuid.UUID `gorm:"not null" json:"user,omitempty"`
-	Comments  []Comment `gorm:"foreignKey:PostID"`
-	Likes     []Like    `gorm:"foreignKey:PostID"`
+	UserID    uuid.UUID `gorm:"not null" json:"user_id,omitempty"`
+	Comments  []Comment `gorm:"foreignKey:PostID" json:"comments,omitempty"`
+	Likes     []Like    `gorm:"foreignKey:PostID" json:"likes,omitempty"`
 	CreatedAt time.Time `gorm:"not null" json:"created_at,omitempty"`
 	UpdatedAt time.Time `gorm:"not null" json:"updated_at,omitempty"`
 }
@@ -38,11 +38,19 @@ type UpdatePost struct {
 
 type Comment struct {
 	ID        string    `gorm:"type:uuid;default:uuid_generate_v4();primary_key" json:"id,omitempty"`
-	Content   string    `gorm:"not null" json:"body,omitempty"`
+	Content   string    `gorm:"not null" json:"content,omitempty"`
 	PostID    uuid.UUID `gorm:"not null" json:"post_id,omitempty"`
 	UserID    uuid.UUID `gorm:"not null" json:"user_id,omitempty"`
 	CreateAt  time.Time `json:"created_at,omitempty"`
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+}
+
+type CreateComment struct {
+	Content string `gorm:"not null" json:"content,omitempty"`
+}
+
+type UpdateComment struct {
+	Content string `gorm:"not null" json:"content,omitempty"`
 }
 
 type Like struct {
