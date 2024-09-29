@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis
+    container_name: redis
+    command: redis-server --requirepass redis-pass  # Set the password here
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=redis-pass  # Optional: Y
