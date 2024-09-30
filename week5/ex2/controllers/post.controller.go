@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,12 +16,15 @@ import (
 )
 
 type PostController struct {
-	DB          *gorm.DB
-	RedisClient *redis.Client
+	DB    *gorm.DB
+	Redis *redis.Client
 }
 
-func NewPostController(DB *gorm.DB, RedisClient *redis.Client) PostController {
-	return PostController{DB, RedisClient}
+func NewPostController(DB *gorm.DB, Redis *redis.Client) PostController {
+	return PostController{
+		DB:    DB,
+		Redis: Redis,
+	}
 }
 
 func (pc *PostController) CreatePost(ctx *gin.Context) {
@@ -105,6 +110,22 @@ func (pc *PostController) FindPosts(ctx *gin.Context) {
 	intLimit, _ := strconv.Atoi(limit)
 	offset := (intPage - 1) * intLimit
 
+	// Generate Redis key using page and limit
+	cacheKey := fmt.Sprintf("posts:page:%d:limit:%d", intPage, intLimit)
+
+	// Try to get cached data from Redis
+	cachedPosts, err := pc.Redis.Get(ctx, cacheKey).Result()
+	if err == nil && cachedPosts != "" {
+		// If data is found in cache, return the cached data
+		var posts []models.Post
+		// Unmarshal the cached JSON data into the posts struct
+		if err := json.Unmarshal([]byte(cachedPosts), &posts); err == nil {
+			ctx.JSON(http.StatusOK, gin.H{"status": "success", "results": len(posts), "data": posts})
+			return
+		}
+	}
+
+	// If cache miss or unmarshaling fails, query the database
 	var posts []models.Post
 	results := pc.DB.Preload("Likes").Preload("Comments").Limit(intLimit).Offset(offset).Find(&posts)
 	if results.Error != nil {
@@ -112,6 +133,14 @@ func (pc *PostController) FindPosts(ctx *gin.Context) {
 		return
 	}
 
+	// Marshal the result to JSON for caching
+	postsJSON, err := json.Marshal(posts)
+	if err == nil {
+		// Cache the result in Redis with a TTL (Time to Live) of 10 minutes
+		pc.Redis.Set(ctx, cacheKey, postsJSON, 10*time.Minute)
+	}
+
+	// Return the result from the database
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "results": len(posts), "data": posts})
 }
 
