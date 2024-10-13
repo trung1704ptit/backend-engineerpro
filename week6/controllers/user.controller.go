@@ -163,3 +163,23 @@ func (uc *UserController) UnfollowerUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": "Successfully unfollowed the user"})
 }
+
+func (uc *UserController) GetNewsFeed(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser").(models.User)
+
+	// find the users that current user is following
+	var following []models.User
+	if err := uc.DB.Model(&currentUser).Association("Following").Find(&following); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Unable to get user following"})
+		return
+	}
+
+	// fetch the posts from fllowing list
+	var posts []models.Post
+	if err := uc.DB.Where("user_id IN ?", following).Order("created_at desc").Find(&posts).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Unable to get the posts"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{"newfeeds": posts}})
+}
