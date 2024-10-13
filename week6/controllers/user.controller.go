@@ -17,7 +17,7 @@ func NewUserController(DB *gorm.DB) UserController {
 	return UserController{DB}
 }
 
-func (uc *UserController) GetMe(ctx *gin.Context) {
+func (uc *UserController) UserProfile(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(models.User)
 
 	userResponse := &models.UserResponse{
@@ -32,6 +32,68 @@ func (uc *UserController) GetMe(ctx *gin.Context) {
 		UpdatedAt:    currentUser.UpdatedAt,
 	}
 
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{"user": userResponse}})
+}
+
+func (uc *UserController) UpdateUserProfile(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser").(models.User) // Get the current logged-in user
+
+	// Bind the incoming JSON body to a User struct
+	var updateData struct {
+		Name         string `json:"name"`
+		Age          int64  `json:"age"`
+		Email        string `json:"email"`
+		ProfileImage string `json:"profile_image"`
+	}
+
+	if err := ctx.ShouldBindJSON(&updateData); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid input"})
+		return
+	}
+
+	// Update the fields if they are provided
+	if updateData.Name != "" {
+		currentUser.Name = updateData.Name
+	}
+
+	if updateData.Age != 0 {
+		currentUser.Age = updateData.Age
+	}
+
+	if updateData.Email != "" {
+		// Check if the new email is already in use by another user
+		var existingUser models.User
+		if err := uc.DB.Where("email = ?", updateData.Email).First(&existingUser).Error; err == nil && existingUser.ID != currentUser.ID {
+			ctx.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Email already in use"})
+			return
+		}
+		currentUser.Email = updateData.Email
+	}
+
+	if updateData.ProfileImage != "" {
+		currentUser.ProfileImage = updateData.ProfileImage
+	}
+
+	// Save the updated user to the database
+	if err := uc.DB.Save(&currentUser).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Unable to update user profile"})
+		return
+	}
+
+	// Prepare response
+	userResponse := &models.UserResponse{
+		ID:           currentUser.ID,
+		Name:         currentUser.Name,
+		Age:          currentUser.Age,
+		Email:        currentUser.Email,
+		ProfileImage: currentUser.ProfileImage,
+		Role:         currentUser.Role,
+		Provider:     currentUser.Provider,
+		CreatedAt:    currentUser.CreatedAt,
+		UpdatedAt:    currentUser.UpdatedAt,
+	}
+
+	// Return success response
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{"user": userResponse}})
 }
 

@@ -17,5 +17,8 @@ func NewRouteUserController(userController controllers.UserController) UserRoute
 func (uc *UserRouteController) UserRoute(rg *gin.RouterGroup) {
 
 	router := rg.Group("users")
-	router.GET("/me", middleware.DeserializeUser(), uc.userController.GetMe)
+	router.GET("/profile", middleware.DeserializeUser(), uc.userController.UserProfile)
+	router.PUT("/profile", middleware.DeserializeUser(), uc.userController.UpdateUserProfile)
+	router.POST("/follow/:userID", middleware.DeserializeUser(), uc.userController.FollowUser)
+	router.DELETE("/unfollow/:userID", middleware.DeserializeUser(), uc.userController.UnfollowerUser)
 }
